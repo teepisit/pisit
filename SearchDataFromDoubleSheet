@@ -1,0 +1,48 @@
+var ss = SpreadsheetApp.getActiveSpreadsheet()
+var sheet = ss.getSheetByName("แผ่น1");
+function doPost(e) {
+  var data = JSON.parse(e.postData.contents)
+  var userMsg = data.originalDetectIntentRequest.payload.data.message.text;
+  var values = sheet.getDataRange().getDisplayValues()
+  let result = {
+    "fulfillmentMessages": [
+      {
+        "platform": "line",
+        "type": 4,
+        "payload": {
+          "line": {}
+        }
+      }
+    ]
+  }
+  let sheet2_name = values.find(r => {
+    return r[0] == userMsg
+  })
+  if (sheet2_name != null) {
+    sheet = ss.getSheetByName(sheet2_name)
+    values = sheet.getDataRange().getDisplayValues()
+    let resultRow = values.find(r => {
+      return r[0] == userMsg
+    })
+    if (resultRow != row) {
+      let name = resultRow[1] //ชื่ออยู่คอลัมน์ A
+      let anything = resultRow[2] //อะไรก็แล้วแต่ในคอลัมน์ต่อๆไป สามารถกำหนดตัวแปรเพิ่มได้เลย
+      result.fulfillmentMessages.payload.line = {
+        "type": "text",
+        "text": name+" "+anything
+      }
+    } else {
+      result.fulfillmentMessages.payload.line = {
+        "type": "text",
+        "text": "ไม่เจอข้อมูลที่ตรงกับ " + userMsg + " ในชีท 2"
+      }
+    }
+  } else {
+    result.fulfillmentMessages.payload.line = {
+      "type": "text",
+      "text": "ไม่เจอชื่อชีท 2"
+    }
+  }
+  var replyJSON = ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  return replyJSON;
+}
